@@ -23,40 +23,19 @@ var JavadocToMarkdown = function () {
 	function fromDoc(code, headingsLevel, fnAddTagsMarkdown) {
 		var i,
 			out,
-			sections,
-			classes,
-			attributes,
-			methods;
+			sections;
 
 		// get all documentation sections from code
 		sections = getSections(code);
-		classes = sections[0].classes;
-		attributes = sections[0].attributes;
-		methods = sections[0].methods;
-
 		// initialize a string buffer
 		out = [];
+
 		out.push("#".repeat(headingsLevel)+" Documentation");
 
-		for (i = 0; i < classes.length; i++) {
-			out.push(fromSection(classes[i], headingsLevel, fnAddTagsMarkdown));
+		for (i = 0; i < sections.length; i++) {
+			out.push(fromSection(sections[i], headingsLevel, fnAddTagsMarkdown));
 		}
-		out.push("\n\n");
-		out.push('| Mező | Típus | Alapértelmezett érték | Leírás |');
-		out.push("\n");
-		out.push('|---|---|---|---|');
-		for (i = 0; i < attributes.length; i++) {
-			out.push("\n");
-			out.push(fieldFromSection(attributes[i], headingsLevel, fnAddTagsMarkdown));
-		}
-		out.push("\n\n");
-		out.push('| Függvény | Visszatérés típus | Paraméter | Leírás |');
-		out.push("\n");
-		out.push('|---|---|---|---|');
-		for (i = 0; i < methods.length; i++) {
-			out.push(methodFromSection(methods[i], headingsLevel, fnAddTagsMarkdown));
-		}
-		out.push("\n\n");
+
 		// return the contents of the string buffer and add a trailing newline
 		return out.join("")+"\n";
 	}
@@ -299,139 +278,6 @@ var JavadocToMarkdown = function () {
 		return out.join("");
 	}
 
-	function fieldFromSection(section, headingsLevel, fnAddTagsMarkdown) {
-		var assocBuffer,
-			description,
-			field,
-			out;
-
-		// initialize a string buffer
-		out = [];
-
-		// first get the field that we want to describe
-		field = getFieldDeclaration(section.line);
-		// if there is no field to describe
-		if (!field) {
-			// do not return any documentation
-			return "";
-		}
-		var fieldParts = field.split(" ");
-		var hasDefaultValue = false;
-		fieldParts.remove('private');
-		fieldParts.remove('public');
-		fieldParts.remove('protected');
-		fieldParts.remove('final');
-		fieldParts.remove('static');
-		if (fieldParts.includes('=')) {
-			fieldParts.remove('=');
-			hasDefaultValue = true;
-		}
-
-		if (hasDefaultValue) {
-			out.push('| ' + fieldParts[1] + ' | ' + fieldParts[0] + ' | '  + fieldParts[2] + ' ' + fieldParts[3]  + ' | ');
-		} else{
-			out.push('| ' + fieldParts[1] + ' | ' + fieldParts[0] + ' |  | ');
-		}
-
-		// split the doc comment into main description and tag section
-		var docCommentParts = section.doc.split(/^(?:\t| )*?\*(?:\t| )*?(?=@)/m);
-		// get the main description (which may be an empty string)
-		var rawMainDescription = docCommentParts.shift();
-		// get the tag section (which may be an empty array)
-		var rawTags = docCommentParts;
-
-		description = getDocDescription(rawMainDescription);
-		if (description.length) {
-			out.push(description);
-			out.push(' |');
-		}
-
-		// return the contents of the string buffer
-		return out.join("");
-	}
-
-	function methodFromSection(section, headingsLevel, fnAddTagsMarkdown) {
-		var assocBuffer,
-			description,
-			field,
-			out,
-			p,
-			t,
-			tags;
-
-		// initialize a string buffer
-		out = [];
-
-		// first get the field that we want to describe
-		field = getFieldDeclaration(section.line);
-		// if there is no field to describe
-		if (!field) {
-			// do not return any documentation
-			return "";
-		}
-		out.push("\n");
-		var methodParts = field.split(" ");
-
-		methodParts.remove('private');
-		methodParts.remove('public');
-		methodParts.remove('protected');
-		methodParts.remove('final');
-		methodParts.remove('static');
-
-		// split the doc comment into main description and tag section
-		var docCommentParts = section.doc.split(/^(?:\t| )*?\*(?:\t| )*?(?=@)/m);
-		// get the main description (which may be an empty string)
-		var rawMainDescription = docCommentParts.shift();
-		// get the tag section (which may be an empty array)
-		var rawTags = docCommentParts;
-
-		if (rawMainDescription.includes('Konstruktor')) {
-			return "";
-		}
-
-		var methodName = methodParts[1];
-		if (methodName.includes('(')) {
-			var index = methodName.indexOf('(');
-			methodName = methodName.substring(0, index);
-		}
-		out.push('| ' + methodName + ' | ' + methodParts[0] + ' | ');
-
-		tags = getDocTags(rawTags);
-		if (tags.length) {
-
-			assocBuffer = {};
-			for (t = 0; t < tags.length; t++) {
-				fnAddTagsMarkdown(tags[t], assocBuffer);
-			}
-
-			var parameters;
-			var returns;
-
-			for (p in assocBuffer) {
-				if (assocBuffer.hasOwnProperty(p)) {
-					if (p === "Parameters") {
-						parameters=methodsFromTagGroup(assocBuffer[p])
-					} else if (p === "Returns") {
-						returns=methodsFromTagGroup(assocBuffer[p])
-					}
-				}
-			}
-		}
-
-		out.push(parameters);
-		out.push(' | ');
-
-		description = getDocDescription(rawMainDescription);
-		if (description.length) {
-			out.push(description);
-		} else {
-			out.push(returns);
-		}
-		out.push(' |');
-		// return the contents of the string buffer
-		return out.join("");
-	}
-
 	function fromTagGroup(name, entries) {
 		var i,
 			out;
@@ -460,44 +306,15 @@ var JavadocToMarkdown = function () {
 		return out.join("");
 	}
 
-	function methodsFromTagGroup(entries) {
-		var i,
-			out;
-
-		// initialize a string buffer
-		out = [];
-
-		if (!(entries.length === 1 && entries[0] === null)) {
-			if (entries.length > 1) {
-				out.push(entries[0]);
-				for (i = 1; i < entries.length; i++) {
-					out.push(" <br/> "+entries[i]);
-				}
-			}
-			else if (entries.length === 1) {
-				out.push(" "+entries[0]);
-			}
-		}
-
-		// return the contents of the string buffer
-		return out.join("");
-	}
-
 	function getSections(code) {
 		var docLine,
 			fieldDeclaration,
 			m,
 			out,
-			classes,
-			methods,
-			attributes,
 			regex;
 
 		regex = /\/\*\*([^]*?)\*\/([^{;/]+)/gm;
 		out = [];
-		classes = [];
-		methods = [];
-		attributes = [];
 
 		while ((m = regex.exec(code)) !== null) {
 			if (m.index === regex.lastIndex) {
@@ -524,23 +341,10 @@ var JavadocToMarkdown = function () {
 					// interpret empty lines as if they contained a p-tag
 					docLine = docLine.replace(/\*[ ]*$/gm, "* <p>");
 
-					if (fieldDeclaration.includes('class')) {
-						classes.push({"line": fieldDeclaration, "doc": docLine});
-					}else if (fieldDeclaration.includes('(') && fieldDeclaration.includes(')')){
-						if (fieldDeclaration.includes('=') && fieldDeclaration.includes('new')){
-							attributes.push({"line": fieldDeclaration, "doc": docLine});
-						}else {
-							methods.push({"line": fieldDeclaration, "doc": docLine});
-						}
-					}
-					else {
-						attributes.push({"line": fieldDeclaration, "doc": docLine});
-					}
+					out.push({ "line": fieldDeclaration, "doc": docLine });
 				}
 			}
 		}
-
-		out.push({"classes": classes, "methods": methods, "attributes": attributes});
 
 		return out;
 	}
@@ -681,15 +485,4 @@ var JavadocToMarkdown = function () {
 		return new Array(count + 1).join(this);
 	};
 
-};
-
-Array.prototype.remove = function() {
-	var what, a = arguments, L = a.length, ax;
-	while (L && this.length) {
-		what = a[--L];
-		while ((ax = this.indexOf(what)) !== -1) {
-			this.splice(ax, 1);
-		}
-	}
-	return this;
 };
