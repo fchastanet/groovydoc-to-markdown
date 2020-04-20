@@ -27,7 +27,8 @@ var JavadocToMarkdown = function () {
 			classes,
 			attributes,
 			methods,
-			packages;
+			packages,
+			hasLink = false;
 
 		// get all documentation sections from code
 		sections = getSections(code);
@@ -36,21 +37,23 @@ var JavadocToMarkdown = function () {
 		methods = sections[0].methods;
 		packages = sections[0].packages;
 
+		if (packages.length > 0) {
+			hasLink = true;
+		}
+
 		// initialize a string buffer
 		out = [];
 
-		out.push(createClassDoc(classes, fnAddTagsMarkdown));
+		out.push(createClassDoc(classes, fnAddTagsMarkdown, hasLink));
 		out.push(createFieldDoc(attributes));
 		out.push(createMethodDoc(methods, fnAddTagsMarkdown));
 
 		out.push(createLinksDoc(packages, classes));
 
-		out.push("\n\n");
-		// return the contents of the string buffer and add a trailing newline
 		return out.join("") + "\n";
 	}
 
-	function createClassDoc(classes, fnAddTagsMarkdown) {
+	function createClassDoc(classes, fnAddTagsMarkdown, hasLink) {
 		if (classes.length === 0) {
 			return "";
 		}
@@ -58,7 +61,7 @@ var JavadocToMarkdown = function () {
 		var out = [];
 
 		for (i = 0; i < classes.length; i++) {
-			out.push(classFromSection(classes[i], fnAddTagsMarkdown));
+			out.push(classFromSection(classes[i], fnAddTagsMarkdown, hasLink));
 		}
 
 		return out.join("") + "\n";
@@ -71,7 +74,7 @@ var JavadocToMarkdown = function () {
 		var i;
 		var out = [];
 
-		out.push("\n\n");
+		out.push("\n");
 		out.push("#### Mezők");
 		out.push("\n\n");
 		out.push('| Mező | Típus | Alapértelmezett érték | Leírás |');
@@ -92,7 +95,7 @@ var JavadocToMarkdown = function () {
 		var i;
 		var out = [];
 
-		out.push("\n\n");
+		out.push("\n");
 		out.push("#### Függvények");
 		out.push("\n\n");
 		out.push('| Függvény | Visszatérés típus | Paraméter | Leírás |');
@@ -474,9 +477,9 @@ var JavadocToMarkdown = function () {
 		}
 
 		if (hasDefaultValue) {
-			out.push('| ' + fieldParts[1] + ' | ' + fieldParts[0] + ' | ' + fieldParts[2] + ' ' + fieldParts[3] + ' | ');
+			out.push('| ' + fieldParts[1] + ' | `' + fieldParts[0] + '` | `' + fieldParts[2] + ' ' + fieldParts[3] + '` | ');
 		} else {
-			out.push('| ' + fieldParts[1] + ' | ' + fieldParts[0] + ' |  | ');
+			out.push('| ' + fieldParts[1] + ' | `' + fieldParts[0] + '` | `null` | ');
 		}
 
 		// split the doc comment into main description and tag section
@@ -538,7 +541,7 @@ var JavadocToMarkdown = function () {
 			var index = methodName.indexOf('(');
 			methodName = methodName.substring(0, index);
 		}
-		out.push('| ' + methodName + ' | ' + methodParts[0] + ' | ');
+		out.push('| ' + methodName + ' | `' + methodParts[0] + '` | ');
 
 		tags = getDocTags(rawTags);
 		if (tags.length) {
@@ -576,7 +579,7 @@ var JavadocToMarkdown = function () {
 		return out.join("");
 	}
 
-	function classFromSection(section, fnAddTagsMarkdown) {
+	function classFromSection(section, fnAddTagsMarkdown, hasLink) {
 		var assocBuffer,
 			description,
 			field,
@@ -606,7 +609,11 @@ var JavadocToMarkdown = function () {
 		classParts.remove('class');
 
 		var className = classParts[0];
-		out.push("### [" + className + "][" + className + "]");
+		if (hasLink) {
+			out.push("### [" + className + "][" + className + "]");
+		} else {
+			out.push("### " + className);
+		}
 
 		// split the doc comment into main description and tag section
 		var docCommentParts = section.doc.split(/^(?:\t| )*?\*(?:\t| )*?(?=@)/m);
@@ -740,9 +747,11 @@ var JavadocToMarkdown = function () {
 		packages = [];
 
 		var packageLines = packageRegex.exec(code)
-		var packageLine = packageLines[0];
-		if (packageLine != null) {
-			packages.push({"packages": packageLine, "doc": packageLine});
+		if (packageLines != null) {
+			var packageLine = packageLines[0];
+			if (packageLine != null) {
+				packages.push({"packages": packageLine, "doc": packageLine});
+			}
 		}
 
 		while ((m = regex.exec(code)) !== null) {
