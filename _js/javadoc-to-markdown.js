@@ -26,39 +26,102 @@ var JavadocToMarkdown = function () {
 			sections,
 			classes,
 			attributes,
-			methods;
+			methods,
+			packages;
 
 		// get all documentation sections from code
 		sections = getSections(code);
 		classes = sections[0].classes;
 		attributes = sections[0].attributes;
 		methods = sections[0].methods;
+		packages = sections[0].packages;
 
 		// initialize a string buffer
 		out = [];
-		out.push("#".repeat(headingsLevel)+" Documentation");
+
+		out.push(createClassDoc(classes, fnAddTagsMarkdown));
+		out.push(createFieldDoc(attributes));
+		out.push(createMethodDoc(methods, fnAddTagsMarkdown));
+
+		out.push(createLinksDoc(packages, classes));
+
+		out.push("\n\n");
+		// return the contents of the string buffer and add a trailing newline
+		return out.join("") + "\n";
+	}
+
+	function createClassDoc(classes, fnAddTagsMarkdown) {
+		if (classes.length === 0) {
+			return "";
+		}
+		var i;
+		var out = [];
 
 		for (i = 0; i < classes.length; i++) {
-			out.push(fromSection(classes[i], headingsLevel, fnAddTagsMarkdown));
+			out.push(classFromSection(classes[i], fnAddTagsMarkdown));
 		}
+
+		return out.join("") + "\n";
+	}
+
+	function createFieldDoc(attributes) {
+		if (attributes.length === 0) {
+			return "";
+		}
+		var i;
+		var out = [];
+
+		out.push("\n\n");
+		out.push("#### Mezők");
 		out.push("\n\n");
 		out.push('| Mező | Típus | Alapértelmezett érték | Leírás |');
 		out.push("\n");
 		out.push('|---|---|---|---|');
 		for (i = 0; i < attributes.length; i++) {
 			out.push("\n");
-			out.push(fieldFromSection(attributes[i], headingsLevel, fnAddTagsMarkdown));
+			out.push(fieldFromSection(attributes[i]));
 		}
+
+		return out.join("") + "\n";
+	}
+
+	function createMethodDoc(methods, fnAddTagsMarkdown) {
+		if (methods.length === 0) {
+			return "";
+		}
+		var i;
+		var out = [];
+
+		out.push("\n\n");
+		out.push("#### Függvények");
 		out.push("\n\n");
 		out.push('| Függvény | Visszatérés típus | Paraméter | Leírás |');
 		out.push("\n");
 		out.push('|---|---|---|---|');
 		for (i = 0; i < methods.length; i++) {
-			out.push(methodFromSection(methods[i], headingsLevel, fnAddTagsMarkdown));
+			out.push(methodFromSection(methods[i], fnAddTagsMarkdown));
 		}
-		out.push("\n\n");
-		// return the contents of the string buffer and add a trailing newline
-		return out.join("")+"\n";
+
+		return out.join("") + "\n";
+	}
+
+	function createLinksDoc(packages, classes) {
+		if (classes.length === 0 || packages.length === 0) {
+			return "";
+		}
+		var i;
+		var out = [];
+		var packageParts = packages[0].packages.split(" ");
+		packageParts.remove("package");
+		var packageLine = packageParts[0];
+		packageLine = packageLine.split('.').join('/');
+		packageLine = packageLine.split(';').join('');
+		var link = 'src/main/java/' + packageLine + "/";
+
+		for (i = 0; i < classes.length; i++) {
+			out.push(linkFromSection(classes[0], link));
+		}
+		return out.join("") + "\n";
 	}
 
 	/**
@@ -68,43 +131,86 @@ var JavadocToMarkdown = function () {
 	 * @param {number} headingsLevel the headings level to use as the base (1-6)
 	 * @returns {string} the Markdown documentation
 	 */
-	this.fromStaticTypesDoc = function(code, headingsLevel) {
-		return fromDoc(code, headingsLevel, function(tag, assocBuffer) {
+	this.fromStaticTypesDoc = function (code, headingsLevel) {
+		return fromDoc(code, headingsLevel, function (tag, assocBuffer) {
 			var tokens;
 			switch (tag.key) {
-				case "abstract": addToBuffer(assocBuffer, "Abstract", tag.value); break;
-				case "access": addToBuffer(assocBuffer, "Access", tag.value); break;
-				case "author": addToBuffer(assocBuffer, "Author", tag.value); break;
-				case "constructor": addToBuffer(assocBuffer, "Constructor", null); break;
-				case "copyright": addToBuffer(assocBuffer, "Copyright", tag.value); break;
+				case "abstract":
+					addToBuffer(assocBuffer, "Abstract", tag.value);
+					break;
+				case "access":
+					addToBuffer(assocBuffer, "Access", tag.value);
+					break;
+				case "author":
+					addToBuffer(assocBuffer, "Author", tag.value);
+					break;
+				case "constructor":
+					addToBuffer(assocBuffer, "Constructor", null);
+					break;
+				case "copyright":
+					addToBuffer(assocBuffer, "Copyright", tag.value);
+					break;
 				case "deprec":
-				case "deprecated": addToBuffer(assocBuffer, "Deprecated", null); break;
-				case "example": addToBuffer(assocBuffer, "Example", tag.value); break;
+				case "deprecated":
+					addToBuffer(assocBuffer, "Deprecated", null);
+					break;
+				case "example":
+					addToBuffer(assocBuffer, "Example", tag.value);
+					break;
 				case "exception":
 				case "throws":
 					tokens = tag.value.tokenize(/\s+/g, 2);
-					addToBuffer(assocBuffer, "Exceptions", "`"+tokens[0]+"` — "+tokens[1]);
+					addToBuffer(assocBuffer, "Exceptions", "`" + tokens[0] + "` — " + tokens[1]);
 					break;
-				case "exports": addToBuffer(assocBuffer, "Exports", tag.value); break;
-				case "license": addToBuffer(assocBuffer, "License", tag.value); break;
-				case "link": addToBuffer(assocBuffer, "Link", tag.value); break;
-				case "name": addToBuffer(assocBuffer, "Alias", tag.value); break;
-				case "package": addToBuffer(assocBuffer, "Package", tag.value); break;
+				case "exports":
+					addToBuffer(assocBuffer, "Exports", tag.value);
+					break;
+				case "license":
+					addToBuffer(assocBuffer, "License", tag.value);
+					break;
+				case "link":
+					addToBuffer(assocBuffer, "Link", tag.value);
+					break;
+				case "name":
+					addToBuffer(assocBuffer, "Alias", tag.value);
+					break;
+				case "package":
+					addToBuffer(assocBuffer, "Package", tag.value);
+					break;
 				case "param":
 					tokens = tag.value.tokenize(/\s+/g, 2);
-					addToBuffer(assocBuffer, "Parameters", "`"+tokens[0]+"` — "+tokens[1]);
+					addToBuffer(assocBuffer, "Parameters", "`" + tokens[0] + "` — " + tokens[1]);
 					break;
-				case "private": addToBuffer(assocBuffer, "Private", null); break;
+				case "private":
+					addToBuffer(assocBuffer, "Private", null);
+					break;
 				case "return":
-				case "returns": addToBuffer(assocBuffer, "Returns", tag.value); break;
-				case "see": addToBuffer(assocBuffer, "See also", tag.value); break;
-				case "since": addToBuffer(assocBuffer, "Since", tag.value); break;
-				case "static": addToBuffer(assocBuffer, "Static", tag.value); break;
-				case "subpackage": addToBuffer(assocBuffer, "Sub-package", tag.value); break;
-				case "this": addToBuffer(assocBuffer, "This", "`"+tag.value+"`"); break;
-				case "todo": addToBuffer(assocBuffer, "To-do", tag.value); break;
-				case "version": addToBuffer(assocBuffer, "Version", tag.value); break;
-				default: break;
+				case "returns":
+					addToBuffer(assocBuffer, "Returns", tag.value);
+					break;
+				case "see":
+					addToBuffer(assocBuffer, "See also", tag.value);
+					break;
+				case "since":
+					addToBuffer(assocBuffer, "Since", tag.value);
+					break;
+				case "static":
+					addToBuffer(assocBuffer, "Static", tag.value);
+					break;
+				case "subpackage":
+					addToBuffer(assocBuffer, "Sub-package", tag.value);
+					break;
+				case "this":
+					addToBuffer(assocBuffer, "This", "`" + tag.value + "`");
+					break;
+				case "todo":
+					addToBuffer(assocBuffer, "To-do", tag.value);
+					break;
+				case "version":
+					addToBuffer(assocBuffer, "Version", tag.value);
+					break;
+				default:
+					break;
 			}
 		});
 	};
@@ -118,50 +224,91 @@ var JavadocToMarkdown = function () {
 	 * @param {function} fnFormatTypeAndName the function that formats type and name information (two arguments)
 	 * @returns {string} the Markdown documentation
 	 */
-	this.fromDynamicTypesDoc = function(code, headingsLevel, fnFormatType, fnFormatTypeAndName) {
-		return fromDoc(code, headingsLevel, function(tag, assocBuffer) {
+	this.fromDynamicTypesDoc = function (code, headingsLevel, fnFormatType, fnFormatTypeAndName) {
+		return fromDoc(code, headingsLevel, function (tag, assocBuffer) {
 			var tokens;
 			switch (tag.key) {
-				case "abstract": addToBuffer(assocBuffer, "Abstract", tag.value); break;
-				case "access": addToBuffer(assocBuffer, "Access", tag.value); break;
-				case "author": addToBuffer(assocBuffer, "Author", tag.value); break;
-				case "constructor": addToBuffer(assocBuffer, "Constructor", null); break;
-				case "copyright": addToBuffer(assocBuffer, "Copyright", tag.value); break;
+				case "abstract":
+					addToBuffer(assocBuffer, "Abstract", tag.value);
+					break;
+				case "access":
+					addToBuffer(assocBuffer, "Access", tag.value);
+					break;
+				case "author":
+					addToBuffer(assocBuffer, "Author", tag.value);
+					break;
+				case "constructor":
+					addToBuffer(assocBuffer, "Constructor", null);
+					break;
+				case "copyright":
+					addToBuffer(assocBuffer, "Copyright", tag.value);
+					break;
 				case "deprec":
-				case "deprecated": addToBuffer(assocBuffer, "Deprecated", null); break;
-				case "example": addToBuffer(assocBuffer, "Example", tag.value); break;
+				case "deprecated":
+					addToBuffer(assocBuffer, "Deprecated", null);
+					break;
+				case "example":
+					addToBuffer(assocBuffer, "Example", tag.value);
+					break;
 				case "exception":
 				case "throws":
 					tokens = tag.value.tokenize(/\s+/g, 2);
-					addToBuffer(assocBuffer, "Exceptions", fnFormatType(tokens[0])+" — "+tokens[1]);
+					addToBuffer(assocBuffer, "Exceptions", fnFormatType(tokens[0]) + " — " + tokens[1]);
 					break;
-				case "exports": addToBuffer(assocBuffer, "Exports", tag.value); break;
-				case "license": addToBuffer(assocBuffer, "License", tag.value); break;
-				case "link": addToBuffer(assocBuffer, "Link", tag.value); break;
-				case "name": addToBuffer(assocBuffer, "Alias", tag.value); break;
-				case "package": addToBuffer(assocBuffer, "Package", tag.value); break;
+				case "exports":
+					addToBuffer(assocBuffer, "Exports", tag.value);
+					break;
+				case "license":
+					addToBuffer(assocBuffer, "License", tag.value);
+					break;
+				case "link":
+					addToBuffer(assocBuffer, "Link", tag.value);
+					break;
+				case "name":
+					addToBuffer(assocBuffer, "Alias", tag.value);
+					break;
+				case "package":
+					addToBuffer(assocBuffer, "Package", tag.value);
+					break;
 				case "param":
 					tokens = tag.value.tokenize(/\s+/g, 3);
-					addToBuffer(assocBuffer, "Parameters", fnFormatTypeAndName(tokens[0], tokens[1])+" — "+tokens[2]);
+					addToBuffer(assocBuffer, "Parameters", fnFormatTypeAndName(tokens[0], tokens[1]) + " — " + tokens[2]);
 					break;
-				case "private": addToBuffer(assocBuffer, "Private", null); break;
+				case "private":
+					addToBuffer(assocBuffer, "Private", null);
+					break;
 				case "return":
 				case "returns":
 					tokens = tag.value.tokenize(/\s+/g, 2);
-					addToBuffer(assocBuffer, "Returns", fnFormatType(tokens[0])+" — "+tokens[1]);
+					addToBuffer(assocBuffer, "Returns", fnFormatType(tokens[0]) + " — " + tokens[1]);
 					break;
-				case "see": addToBuffer(assocBuffer, "See also", tag.value); break;
-				case "since": addToBuffer(assocBuffer, "Since", tag.value); break;
-				case "static": addToBuffer(assocBuffer, "Static", tag.value); break;
-				case "subpackage": addToBuffer(assocBuffer, "Sub-package", tag.value); break;
-				case "this": addToBuffer(assocBuffer, "This", "`"+tag.value+"`"); break;
-				case "todo": addToBuffer(assocBuffer, "To-do", tag.value); break;
+				case "see":
+					addToBuffer(assocBuffer, "See also", tag.value);
+					break;
+				case "since":
+					addToBuffer(assocBuffer, "Since", tag.value);
+					break;
+				case "static":
+					addToBuffer(assocBuffer, "Static", tag.value);
+					break;
+				case "subpackage":
+					addToBuffer(assocBuffer, "Sub-package", tag.value);
+					break;
+				case "this":
+					addToBuffer(assocBuffer, "This", "`" + tag.value + "`");
+					break;
+				case "todo":
+					addToBuffer(assocBuffer, "To-do", tag.value);
+					break;
 				case "var":
 					tokens = tag.value.tokenize(/\s+/g, 2);
-					addToBuffer(assocBuffer, "Type", fnFormatType(tokens[0])+" — "+tokens[1]);
+					addToBuffer(assocBuffer, "Type", fnFormatType(tokens[0]) + " — " + tokens[1]);
 					break;
-				case "version": addToBuffer(assocBuffer, "Version", tag.value); break;
-				default: break;
+				case "version":
+					addToBuffer(assocBuffer, "Version", tag.value);
+					break;
+				default:
+					break;
 			}
 		});
 	};
@@ -173,7 +320,7 @@ var JavadocToMarkdown = function () {
 	 * @param {number} headingsLevel the headings level to use as the base (1-6)
 	 * @returns {string} the Markdown documentation
 	 */
-	this.fromJavadoc = function(code, headingsLevel) {
+	this.fromJavadoc = function (code, headingsLevel) {
 		return self.fromStaticTypesDoc(code, headingsLevel);
 	};
 
@@ -184,22 +331,22 @@ var JavadocToMarkdown = function () {
 	 * @param {number} headingsLevel the headings level to use as the base (1-6)
 	 * @returns {string} the Markdown documentation
 	 */
-	this.fromPHPDoc = function(code, headingsLevel) {
+	this.fromPHPDoc = function (code, headingsLevel) {
 		return self.fromDynamicTypesDoc(
 			code,
 			headingsLevel,
 			function (type) {
-				return "`"+type+"`";
+				return "`" + type + "`";
 			},
 			function (type, name) {
 				// if we have a valid name (and type)
 				if (/^\$([a-zA-Z0-9_$]+)$/.test(name)) {
-					return "`"+name+"` — `"+type+"`";
+					return "`" + name + "` — `" + type + "`";
 				}
 				// if it seems we only have a name
 				else {
 					// return the name that was, wrongly, in the position of the type
-					return "`"+type+"`";
+					return "`" + type + "`";
 				}
 			}
 		);
@@ -212,22 +359,22 @@ var JavadocToMarkdown = function () {
 	 * @param {number} headingsLevel the headings level to use as the base (1-6)
 	 * @returns {string} the Markdown documentation
 	 */
-	this.fromJSDoc = function(code, headingsLevel) {
+	this.fromJSDoc = function (code, headingsLevel) {
 		return self.fromDynamicTypesDoc(
 			code,
 			headingsLevel,
 			function (type) {
-				return "`"+type.substr(1, type.length-2)+"`";
+				return "`" + type.substr(1, type.length - 2) + "`";
 			},
 			function (type, name) {
 				// if we have a valid type (and name)
 				if (/^\{([^{}]+)\}$/.test(type)) {
-					return "`"+name+"` — `"+type.substr(1, type.length-2)+"`";
+					return "`" + name + "` — `" + type.substr(1, type.length - 2) + "`";
 				}
 				// if it seems we only have a name
 				else {
 					// return the name that was, wrongly, in the position of the type
-					return "`"+type+"`";
+					return "`" + type + "`";
 				}
 			}
 		);
@@ -264,7 +411,7 @@ var JavadocToMarkdown = function () {
 		}
 
 		out.push("\n\n");
-		out.push("#".repeat(headingsLevel+1)+" `"+field+"`");
+		out.push("#".repeat(headingsLevel + 1) + " `" + field + "`");
 
 		// split the doc comment into main description and tag section
 		var docCommentParts = section.doc.split(/^(?:\t| )*?\*(?:\t| )*?(?=@)/m);
@@ -299,9 +446,8 @@ var JavadocToMarkdown = function () {
 		return out.join("");
 	}
 
-	function fieldFromSection(section, headingsLevel, fnAddTagsMarkdown) {
-		var assocBuffer,
-			description,
+	function fieldFromSection(section) {
+		var description,
 			field,
 			out;
 
@@ -328,8 +474,8 @@ var JavadocToMarkdown = function () {
 		}
 
 		if (hasDefaultValue) {
-			out.push('| ' + fieldParts[1] + ' | ' + fieldParts[0] + ' | '  + fieldParts[2] + ' ' + fieldParts[3]  + ' | ');
-		} else{
+			out.push('| ' + fieldParts[1] + ' | ' + fieldParts[0] + ' | ' + fieldParts[2] + ' ' + fieldParts[3] + ' | ');
+		} else {
 			out.push('| ' + fieldParts[1] + ' | ' + fieldParts[0] + ' |  | ');
 		}
 
@@ -337,8 +483,6 @@ var JavadocToMarkdown = function () {
 		var docCommentParts = section.doc.split(/^(?:\t| )*?\*(?:\t| )*?(?=@)/m);
 		// get the main description (which may be an empty string)
 		var rawMainDescription = docCommentParts.shift();
-		// get the tag section (which may be an empty array)
-		var rawTags = docCommentParts;
 
 		description = getDocDescription(rawMainDescription);
 		if (description.length) {
@@ -350,7 +494,7 @@ var JavadocToMarkdown = function () {
 		return out.join("");
 	}
 
-	function methodFromSection(section, headingsLevel, fnAddTagsMarkdown) {
+	function methodFromSection(section, fnAddTagsMarkdown) {
 		var assocBuffer,
 			description,
 			field,
@@ -410,9 +554,9 @@ var JavadocToMarkdown = function () {
 			for (p in assocBuffer) {
 				if (assocBuffer.hasOwnProperty(p)) {
 					if (p === "Parameters") {
-						parameters=methodsFromTagGroup(assocBuffer[p])
+						parameters = methodsFromTagGroup(assocBuffer[p])
 					} else if (p === "Returns") {
-						returns=methodsFromTagGroup(assocBuffer[p])
+						returns = methodsFromTagGroup(assocBuffer[p])
 					}
 				}
 			}
@@ -432,6 +576,101 @@ var JavadocToMarkdown = function () {
 		return out.join("");
 	}
 
+	function classFromSection(section, fnAddTagsMarkdown) {
+		var assocBuffer,
+			description,
+			field,
+			out,
+			p,
+			t,
+			tags;
+
+		// initialize a string buffer
+		out = [];
+
+		// first get the field that we want to describe
+		field = getFieldDeclaration(section.line);
+		// if there is no field to describe
+		if (!field) {
+			// do not return any documentation
+			return "";
+		}
+		var classParts = field.split(" ");
+
+		classParts.remove('private');
+		classParts.remove('public');
+		classParts.remove('protected');
+		classParts.remove('final');
+		classParts.remove('static');
+		classParts.remove('abstract');
+		classParts.remove('class');
+
+		var className = classParts[0];
+		out.push("### [" + className + "][" + className + "]");
+
+		// split the doc comment into main description and tag section
+		var docCommentParts = section.doc.split(/^(?:\t| )*?\*(?:\t| )*?(?=@)/m);
+		// get the main description (which may be an empty string)
+		var rawMainDescription = docCommentParts.shift();
+		// get the tag section (which may be an empty array)
+		var rawTags = docCommentParts;
+
+		tags = getDocTags(rawTags);
+		if (tags.length) {
+
+			assocBuffer = {};
+			for (t = 0; t < tags.length; t++) {
+				fnAddTagsMarkdown(tags[t], assocBuffer);
+			}
+
+			var parameters;
+
+			for (p in assocBuffer) {
+				if (assocBuffer.hasOwnProperty(p)) {
+					if (p === "Parameters") {
+						parameters = fromTagGroup("Paraméterek", assocBuffer[p])
+					}
+				}
+			}
+		}
+		description = getDocDescription(rawMainDescription);
+		if (description.length) {
+			out.push("\n\n")
+			out.push(description);
+		}
+
+		out.push(parameters);
+
+		// return the contents of the string buffer
+		return out.join("");
+	}
+
+	function linkFromSection(section, link) {
+		var field;
+		field = getFieldDeclaration(section.line);
+		if (!field) {
+			return "";
+		}
+
+		var out = [];
+
+		var classParts = field.split(" ");
+
+		classParts.remove('private');
+		classParts.remove('public');
+		classParts.remove('protected');
+		classParts.remove('final');
+		classParts.remove('static');
+		classParts.remove('abstract');
+		classParts.remove('class');
+
+		var className = classParts[0];
+		out.push("\n\n");
+		out.push("[" + className + "]: " + link + className + ".java");
+
+		return out.join("");
+	}
+
 	function fromTagGroup(name, entries) {
 		var i,
 			out;
@@ -441,18 +680,16 @@ var JavadocToMarkdown = function () {
 
 		out.push("\n");
 		if (entries.length === 1 && entries[0] === null) {
-			out.push(" * **"+name+"**");
-		}
-		else {
-			out.push(" * **"+name+":**");
+			out.push(" * **" + name + "**");
+		} else {
+			out.push(" * **" + name + ":**");
 			if (entries.length > 1) {
 				for (i = 0; i < entries.length; i++) {
 					out.push("\n");
-					out.push("   * "+entries[i]);
+					out.push("   * " + entries[i]);
 				}
-			}
-			else if (entries.length === 1) {
-				out.push(" "+entries[0]);
+			} else if (entries.length === 1) {
+				out.push(" " + entries[0]);
 			}
 		}
 
@@ -471,11 +708,10 @@ var JavadocToMarkdown = function () {
 			if (entries.length > 1) {
 				out.push(entries[0]);
 				for (i = 1; i < entries.length; i++) {
-					out.push(" <br/> "+entries[i]);
+					out.push(" <br/> " + entries[i]);
 				}
-			}
-			else if (entries.length === 1) {
-				out.push(" "+entries[0]);
+			} else if (entries.length === 1) {
+				out.push(" " + entries[0]);
 			}
 		}
 
@@ -491,13 +727,23 @@ var JavadocToMarkdown = function () {
 			classes,
 			methods,
 			attributes,
-			regex;
+			packages,
+			regex,
+			packageRegex;
 
 		regex = /\/\*\*([^]*?)\*\/([^{;/]+)/gm;
+		packageRegex = /package(.*?);/gm
 		out = [];
 		classes = [];
 		methods = [];
 		attributes = [];
+		packages = [];
+
+		var packageLines = packageRegex.exec(code)
+		var packageLine = packageLines[0];
+		if (packageLine != null) {
+			packages.push({"packages": packageLine, "doc": packageLine});
+		}
 
 		while ((m = regex.exec(code)) !== null) {
 			if (m.index === regex.lastIndex) {
@@ -518,7 +764,7 @@ var JavadocToMarkdown = function () {
 					// if this is a single line comment
 					if (docLine.indexOf("*") === -1) {
 						// prepend an asterisk to achieve the normal line structure
-						docLine = "*"+docLine;
+						docLine = "*" + docLine;
 					}
 
 					// interpret empty lines as if they contained a p-tag
@@ -526,21 +772,20 @@ var JavadocToMarkdown = function () {
 
 					if (fieldDeclaration.includes('class')) {
 						classes.push({"line": fieldDeclaration, "doc": docLine});
-					}else if (fieldDeclaration.includes('(') && fieldDeclaration.includes(')')){
-						if (fieldDeclaration.includes('=') && fieldDeclaration.includes('new')){
+					} else if (fieldDeclaration.includes('(') && fieldDeclaration.includes(')')) {
+						if (fieldDeclaration.includes('=') && fieldDeclaration.includes('new')) {
 							attributes.push({"line": fieldDeclaration, "doc": docLine});
-						}else {
+						} else {
 							methods.push({"line": fieldDeclaration, "doc": docLine});
 						}
-					}
-					else {
+					} else {
 						attributes.push({"line": fieldDeclaration, "doc": docLine});
 					}
 				}
 			}
 		}
 
-		out.push({"classes": classes, "methods": methods, "attributes": attributes});
+		out.push({"classes": classes, "methods": methods, "attributes": attributes, "packages": packages});
 
 		return out;
 	}
@@ -603,7 +848,7 @@ var JavadocToMarkdown = function () {
 						m[2] = m[2].split(/[\r\n]{1,2}(?:\t| )*?\*(?:\t| )*/).join("\n\n     ");
 
 						// add the key and value for this tag to the output
-						out.push({ "key": cleanSingleLine(m[1]), "value": m[2] });
+						out.push({"key": cleanSingleLine(m[1]), "value": m[2]});
 					}
 				}
 			}
@@ -642,7 +887,7 @@ var JavadocToMarkdown = function () {
 		buffer[key].push(value);
 	}
 
-	String.prototype.tokenize = function(splitByRegex, limit) {
+	String.prototype.tokenize = function (splitByRegex, limit) {
 		var counter,
 			i,
 			m,
@@ -677,13 +922,13 @@ var JavadocToMarkdown = function () {
 		return tokens;
 	};
 
-	String.prototype.repeat = function(count) {
+	String.prototype.repeat = function (count) {
 		return new Array(count + 1).join(this);
 	};
 
 };
 
-Array.prototype.remove = function() {
+Array.prototype.remove = function () {
 	var what, a = arguments, L = a.length, ax;
 	while (L && this.length) {
 		what = a[--L];
