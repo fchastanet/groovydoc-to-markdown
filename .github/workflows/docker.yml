@@ -13,22 +13,28 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
       
+      # setup Docker buld action
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      
       - name: Log in to Docker Hub
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      - name: Build image and push to Docker Hub and GitHub Container Registry
+        uses: docker/build-push-action@v2
         with:
-          images: scrasnups/build
-      
-      - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
-        with:
-          context: .
-          push: true
-          tags: node-groovydoc-to-markdown-${{ steps.meta.outputs.tags }}
-          labels: node-groovydoc-to-markdown-${{ steps.meta.outputs.labels }}
+          # relative path to the place where source code with Dockerfile is located
+          context: ./src/samples/simple
+          # Note: tags has to be all lower-case
+          tags: |
+            scrasnups/build:node-groovydoc-to-markdown-${GITHUB_REF#refs/*/}
+            scrasnups/build:node-groovydoc-to-markdown-latest
+          # build on feature branches, push only on master branch
+          push: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
