@@ -11,7 +11,7 @@ node_modules/.bin/doc2md src groovy doc
 ## Docker Usage
 
 ```bash
-docker run scrasnups/build:groovydoc-to-markdown:latest \
+docker run scrasnups/build:node-groovydoc-to-markdown-1.0.1 \
   -v "$(pwd)":/tmp
   node doc2md.js /tmp/src groovy /tmp/doc
 ```
