@@ -39,15 +39,15 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            scrasnups/build:node-groovydoc-to-markdown-
+            scrasnups/build
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern=node-groovydoc-to-markdown-{{version}}
+            type=semver,pattern=node-groovydoc-to-markdown-{{major}}.{{minor}}
+            type=semver,pattern=node-groovydoc-to-markdown-{{major}}
             type=sha
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
