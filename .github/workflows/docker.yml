@@ -4,7 +4,14 @@ name: Publish Docker image
 on:
   release:
     types: [published]
-
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - 'master'
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -19,23 +26,37 @@ jobs:
         uses: docker/setup-buildx-action@v1
       
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            scrasnups/build:node-groovydoc-to-markdown-
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
       - name: Build image and push to Docker Hub and GitHub Container Registry
         uses: docker/build-push-action@v2
         with:
           # relative path to the place where source code with Dockerfile is located
-          context: ./src/samples/simple
-          # Note: tags has to be all lower-case
-          tags: |
-            scrasnups/build:node-groovydoc-to-markdown-${RELEASE_VERSION}
-            scrasnups/build:node-groovydoc-to-markdown-latest
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           # build on feature branches, push only on master branch
           push: ${{ github.ref == 'refs/heads/master' }}
 
