@@ -1,6 +1,6 @@
 # Documentation
 
-## `function myFunc(one, two, three)`
+## `function myFunc($one, $two = 2, $three = "three")`
 
 This is an exemplary description and there should be no line break before this line.
 
@@ -13,12 +13,12 @@ Wrapping in p-tags with closing tag should be possible, too, and make no differe
 Except for this text which will have a line break before, of course.
 
  * **Parameters:**
-   * `one` — first parameter (without a type)
-   * `two` — `int` — the second parameter (with a type)
-   * `three` — `MyNoun` — the third parameter (custom object)
+   * `$one` — the first parameter (without a type)
+   * `int` — $two the second parameter (with a type)
+   * `MyNoun` — $three the third parameter (custom object)
 
      second line for third parameter
- * **Returns:** `string` — some arbitrary return value
+ * **Returns:** string some arbitrary return value
  * **Author:**
    * John Doe (john.doe@example.org)
    * Jane Doe (@jane)
@@ -26,18 +26,17 @@ Except for this text which will have a line break before, of course.
  * **Since:** 1.0
  * **See also:** otherFunc
 
-## `var MyClass = function ()`
+## `class MyClass`
 
-You can document "classes" as well (and docs may have wrong indentation)
+You can document classes as well (and docs may have wrong indentation)
 
-## `function boringFunc()`
+### `function boringFunc()`
 
 The description may even be single-line and followed by a blank line
 
-## `var i = 0`
+### `$i = 0`
 
- * **Type:** `string` — shows that you can give type annotations
 
-## `var privateVariable = ""`
+### `$privateVariable = ""`
 
  * **Private**

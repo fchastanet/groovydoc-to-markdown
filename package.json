@@ -1,0 +1,26 @@
+{
+  "name": "groovydoc-to-markdown",
+  "version": "1.0.0",
+  "description": "convert groovydoc to markdown",
+  "main": "src/doc2md.js",
+  "directories": {
+    "src": "src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fchastanet/groovydoc-to-markdown.git"
+  },
+  "keywords": [
+    "groovy",
+    "markdown"
+  ],
+  "author": "François Chastanet",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/fchastanet/groovydoc-to-markdown/issues"
+  },
+  "homepage": "https://github.com/fchastanet/groovydoc-to-markdown#readme",
+  "dependencies": {
+    "fast-glob": "^3.2.7"
+  }
+}

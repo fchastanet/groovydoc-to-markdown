@@ -4,8 +4,11 @@ Generate Markdown from your Javadoc, PHPDoc or JSDoc comments
 
 ## Usage
 
- * Use the [online version](https://delight-im.github.io/Javadoc-to-Markdown/) of this project
- * Call methods from [`javadoc-to-markdown.js`](_js/javadoc-to-markdown.js) directly from code
+```bash
+docker run scrasnups/build:groovydoc-to-markdown:latest \
+  -v "$(pwd)":/tmp
+  node doc2md.js /tmp/src /tmp/doc
+```
 
 ## Contributing
 
