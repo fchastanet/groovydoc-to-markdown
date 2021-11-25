@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "convert groovydoc to markdown",
   "main": "src/doc2md.js",
+  "bin": {
+    "doc2md": "src/doc2md.js"
+  },
   "directories": {
     "src": "src"
   },

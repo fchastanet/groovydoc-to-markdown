@@ -1,13 +1,19 @@
-# Javadoc to Markdown
+# Groovy doc to Markdown
 
-Generate Markdown from your Javadoc, PHPDoc or JSDoc comments
+Generate Markdown from your GroovyDoc, Javadoc, PHPDoc or JSDoc comments
 
-## Usage
+## NPM Usage
+```bash
+npm install --save-dev groovydoc-to-markdown
+node_modules/.bin/doc2md src groovy doc
+```
+
+## Docker Usage
 
 ```bash
 docker run scrasnups/build:groovydoc-to-markdown:latest \
   -v "$(pwd)":/tmp
-  node doc2md.js /tmp/src /tmp/doc
+  node doc2md.js /tmp/src groovy /tmp/doc
 ```
 
 ## Contributing
