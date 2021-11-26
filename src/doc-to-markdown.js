@@ -434,23 +434,47 @@
 	}
 
 	getDocTags(docLines) {
-		var regex = /^(?:\t| )*?@([a-zA-Z]+)([\s\S]*)/;
+		const regex = /^(?:\t| )*?@([a-zA-Z]+)([\s\S]*)/;
 		var m;
 		var out = [];
-
 		for (var i = 0; i < docLines.length; i++) {
 			m = regex.exec(docLines[i]);
-
 			if (m !== null) {
 				if (typeof m[1] === "string" && m[1] !== null) {
 					if (typeof m[2] === "string" && m[2] !== null) {
 						// trim leading and trailing space in the tag value
 						m[2] = m[2].trim();
 						// format multi-line tag values correctly
-						m[2] = m[2].split(/[\r\n]{1,2}(?:\t| )*?\*(?:\t| )*/).join("\n\n     ");
+						m[2] = m[2].split(/[\r\n]{1,2}(?:\t| )*?\*/)
+
+						let value = ''
+						const codeBlockRegex = /^(?:\t| )*?```/
+						let codeBlock = false
+						m[2].forEach((part, index, theArray) => {
+							if (codeBlockRegex.exec(part)) {
+								codeBlock=!codeBlock
+								if (!codeBlock) {
+									value += "\n"
+								} else {
+									value = value.replace(/[ \t]+$/g,'');  
+								}
+								value += part.trim()
+								if (codeBlock) {
+									value += "\n"
+								}
+								return
+							}
+							if (codeBlock) {
+								value += part + "\n"
+							} else if (index < m[2].length - 1) {
+								value += part.trim() + "\n\n     " 
+							} else {
+								value += part.trim()
+							}
+						})
 
 						// add the key and value for this tag to the output
-						out.push({ "key": this.cleanSingleLine(m[1]), "value": m[2] });
+						out.push({ "key": this.cleanSingleLine(m[1]), "value": value });
 					}
 				}
 			}
