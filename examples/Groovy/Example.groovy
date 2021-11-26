@@ -20,6 +20,7 @@ class Example implements Serializable {
    *   ]
    * ]
    * ```
+   * end of the test
    */
   String examples(String gitDir = '') {
     return this.jenkinsExecutor.dir(gitDir) {

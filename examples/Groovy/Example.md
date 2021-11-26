@@ -8,7 +8,6 @@ class with examples
 
  * **Returns:** String url of the current dir or provided repository
  * **Example:** test
-
 ```json
  [
    categoriesThreshold: [
@@ -17,5 +16,5 @@ class with examples
      performance: [ thresholdWarning: 0.9, thresholdHigh: 0.7 ],
    ]
  ]
-
 ```
+end of the test

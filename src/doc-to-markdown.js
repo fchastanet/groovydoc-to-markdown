@@ -453,15 +453,10 @@
 						m[2].forEach((part, index, theArray) => {
 							if (codeBlockRegex.exec(part)) {
 								codeBlock=!codeBlock
-								if (!codeBlock) {
-									value += "\n"
-								} else {
-									value = value.replace(/[ \t]+$/g,'');  
-								}
-								value += part.trim()
 								if (codeBlock) {
-									value += "\n"
+									value = value.replace(/\n?[ \t]+$/g,'');  
 								}
+								value += part.trim() + "\n"
 								return
 							}
 							if (codeBlock) {
