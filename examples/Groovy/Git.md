@@ -49,7 +49,7 @@ do a clone for given repository and given branch
 
 Step updating git commit status
 
- * **Deprecated**
+ * **Deprecated:** please use updateConditionalGithubCommitStatus instead
 
 ### `void updateConditionalGithubCommitStatus(String gitDir = '')`
 

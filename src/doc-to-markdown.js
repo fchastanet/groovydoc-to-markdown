@@ -65,7 +65,7 @@
 					this.addToBuffer(assocBuffer, "Copyright", tag.value); break;
 				case "deprec":
 				case "deprecated": 
-					this.addToBuffer(assocBuffer, "Deprecated", null); break;
+					this.addToBuffer(assocBuffer, "Deprecated", tag.value); break;
 				case "example": 
 					this.addToBuffer(assocBuffer, "Example", tag.value); break;
 				case "exception":

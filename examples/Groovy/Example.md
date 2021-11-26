@@ -18,3 +18,4 @@ class with examples
  ]
 ```
 end of the test
+ * **Deprecated:** message
