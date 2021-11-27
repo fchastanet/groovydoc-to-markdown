@@ -84,7 +84,7 @@
 				case "package": 
 					this.addToBuffer(assocBuffer, "Package", tag.value); break;
 				case "param":
-					tokens = tag.value.tokenize(/\s+/g, 2);
+					tokens = tag.value.trim().tokenize(/\s+/g, 2);
 					this.addToBuffer(assocBuffer, "Parameters", "`"+tokens[0]+"` — "+tokens[1]);
 					break;
 				case "private": 
@@ -414,63 +414,33 @@
 	}
 
 	getDocDescription(docLines) {
-		var regex = /^(\t| )*?\*(\t| )+(.*?)$/gm;
+		var regex = /^(\t| )*?\*(.*?)$/gm;
 		var m;
 		var out = [];
 
+		const lineState = {}
 		while ((m = regex.exec(docLines)) !== null) {
 			if (m.index === regex.lastIndex) {
 				regex.lastIndex++;
 			}
-
-			if (typeof m[3] === "string" && m[3] !== null) {
-				m[3] = this.cleanLine(m[3]);
-				m[3] = this.replaceHTMLWithMarkdown(m[3]);
-				out.push(m[3]);
+			if (typeof m[2] === "string" && m[2] !== null) {
+				out.push(this.getSimpleLine(m[2], 0, lineState));
 			}
 		}
-
-		return this.cleanLine(out.join(" ").replace(/<(\/)?p>/gi, "\n\n"));
+		return out.join("").replace(/<(\/)?p>/gi, "\n\n");
 	}
 
 	getDocTags(docLines) {
 		const regex = /^(?:\t| )*?@([a-zA-Z]+)([\s\S]*)/;
 		var m;
 		var out = [];
+		const lineState = {}
 		for (var i = 0; i < docLines.length; i++) {
 			m = regex.exec(docLines[i]);
 			if (m !== null) {
 				if (typeof m[1] === "string" && m[1] !== null) {
 					if (typeof m[2] === "string" && m[2] !== null) {
-						// trim leading and trailing space in the tag value
-						m[2] = m[2].trim();
-						// format multi-line tag values correctly
-						m[2] = m[2].split(/[\r\n]{1,2}(?:\t| )*?\*/)
-
-						let value = ''
-						const codeBlockRegex = /^(?:\t| )*?```/
-						const listBlockRegexp = /^(?:\t| )*?(((\+|-|\*) )|([0-9]+\. ))/
-						let codeBlock = false
-						m[2].forEach((part, index, theArray) => {
-							if (codeBlockRegex.exec(part)) {
-								codeBlock=!codeBlock
-								if (codeBlock) {
-									value = value.replace(/\n?[ \t]+$/g,"\n");  
-								}
-								value += part.trim() + "\n"
-								return
-							}
-							if (codeBlock) {
-								value += part + "\n"
-							} else if (listBlockRegexp.exec(part)) {
-								value += part + "\n     "
-							} else if (index < m[2].length - 1) {
-								value += part.trim() + "\n     " 
-							} else {
-								value += part.trim().replace(/<(\/)?p>/gi, "")
-							}
-						})
-
+						const value = this.getSimpleLine(m[2], 4, lineState).replace(/<(\/)?p>/gi, "\n\n");
 						// add the key and value for this tag to the output
 						out.push({ "key": this.cleanSingleLine(m[1]), "value": value });
 					}
@@ -479,6 +449,67 @@
 		}
 
 		return out;
+	}
+
+	getSimpleLine(line, indent, state = {codeBlock: false, listBlock: false, newList: false, value: ''}) {
+		if (Object.keys(state).length === 0) {
+			state.codeBlock = false
+			state.listBlock = false
+			state.newList = false
+			state.value = ''
+		}
+		// format multi-line tag values correctly
+		line = line.split(/[\r\n]{1,2}(?:\t| )*?\*/)
+
+		let value = ''
+		const codeBlockRegex = /^(?:\t| )*?```/
+		const listBlockRegexp = /^(?:\t| )*?(((\+|-|\*) )|([0-9]+\. ))/
+		line.forEach((part, index) => {
+			if (codeBlockRegex.exec(part)) {
+				state.codeBlock=!state.codeBlock
+				state.listBlock=false
+				if (state.codeBlock) {
+					//remove last indentation
+					value = value.replace(/\n?[ \t]+$/g,"\n");
+				}
+				value += part.trim() + "\n"
+				return
+			}
+			if (listBlockRegexp.exec(part)) {
+				state.newList=!state.listBlock
+				state.listBlock=true
+			} else {
+				if (state.listBlock) {
+					value += "\n" //new line to terminate the list
+				}
+				state.listBlock=false
+				if (state.newList) {
+					value += "\n" //new line to terminate the list
+				}
+				state.newList=false
+			}
+
+			if (state.codeBlock) {
+				state.listBlock=false
+				value += part + "\n"
+			} else if (state.listBlock) {
+				if (state.newList) {
+					value += "\n"	
+				}
+				value += " ".repeat(indent) + part + "\n"
+			} else if (index < line.length - 1) {
+				value += part.trim() + "\n" + " ".repeat(indent)
+			} else {
+				state.listBlock=false
+				if (state.value.slice(-1) != "\n" && state.value !== '') {
+					value += " "
+				}
+				value += part.trim().replace(/<(\/)?p>/gi, "\n\n")
+			}
+		})
+
+		state.value += value
+		return value
 	}
 
 	cleanLine(line) {
@@ -504,7 +535,7 @@
 		return line;
 	}
 
-	addToBuffer(buffer, key, value) {
+  addToBuffer(buffer, key, value) {
 		if (typeof buffer[key] === "undefined" || buffer[key] === null) {
 			buffer[key] = [];
 		}

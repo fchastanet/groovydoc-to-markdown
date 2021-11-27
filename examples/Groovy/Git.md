@@ -11,17 +11,17 @@ provides methods to apply to the git repository
 ### `String getCommitSha(String gitDir = '')`
 
  * **Parameters:** `String` — gitDir source directory containing .git directory
- * **Returns:** String current commit sha
+ * **Returns:**  String current commit sha
 
 ### `String getShortCommitSha(String gitDir = '')`
 
  * **Parameters:** `String` — gitDir source directory containing .git directory
- * **Returns:** String current short commit sha
+ * **Returns:**  String current short commit sha
 
 ### `String getLastPusherEmail(String gitDir = '')`
 
  * **Parameters:** `String` — gitDir source directory containing .git directory
- * **Returns:** String the email of the last commit user
+ * **Returns:**  String the email of the last commit user
 
 ### `void lightCheckout(String gitDir, String credentialsId, String remoteUrl, String branch = 'master', short depth = 1)`
 
@@ -53,7 +53,7 @@ Step updating git commit status
 
 ### `void updateConditionalGithubCommitStatus(String gitDir = '')`
 
-Step updating git commit status depending on build result
+Step updating git commit status depending on build result 
 
 this method allows to only put this instruction at the end of the pipeline post { always{ ckGit.updateConditionalGithubCommitStatus() } }
 
