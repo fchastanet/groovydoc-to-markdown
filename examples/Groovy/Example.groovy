@@ -24,8 +24,11 @@ class Example implements Serializable {
    * @deprecated message
    *
    * @param gitDir after empty line
+   * @example report all these kind of logs before being able to report them
+   * **Note**: Lint.transformReport - Note that some logs need to be converted to ng format
+   * @param String test my doc
    */
-  String examples(String gitDir = '') {
+  String examples(String test, String gitDir = '') {
     return this.jenkinsExecutor.dir(gitDir) {
       return this.jenkinsExecutor.sh(returnStdout: true, script: 'git config --get remote.origin.url').trim()
     }

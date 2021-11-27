@@ -4,10 +4,11 @@
 
 class with examples
 
-### `String examples(String gitDir = '')`
+### `String examples(String test, String gitDir = '')`
 
  * **Returns:** String url of the current dir or provided repository
- * **Example:** test
+ * **Example:**
+   * test
 ```json
  [
    categoriesThreshold: [
@@ -18,6 +19,10 @@ class with examples
  ]
 ```
 end of the test
+   * report all these kind of logs before being able to report them
+     **Note**: Lint.transformReport - Note that some logs need to be converted to ng format
  * **Deprecated:** message
      
- * **Parameters:** `gitDir` — after empty line
+ * **Parameters:**
+   * `gitDir` — after empty line
+   * `String` — test my doc
