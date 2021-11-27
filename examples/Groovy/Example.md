@@ -19,3 +19,5 @@ class with examples
 ```
 end of the test
  * **Deprecated:** message
+     
+ * **Parameters:** `gitDir` — after empty line

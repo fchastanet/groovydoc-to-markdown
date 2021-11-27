@@ -16,7 +16,6 @@ Except for this text which will have a line break before, of course.
    * `one` — the first parameter (type is always inferred)
    * `two` — the second parameter (type is always inferred)
    * `three` — the third parameter (type is always inferred)
-
      second line for third parameter
  * **Returns:** some arbitrary return value (with inferred type)
  * **Author:**

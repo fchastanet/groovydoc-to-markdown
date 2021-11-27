@@ -22,6 +22,8 @@ class Example implements Serializable {
    * ```
    * end of the test
    * @deprecated message
+   *
+   * @param gitDir after empty line
    */
   String examples(String gitDir = '') {
     return this.jenkinsExecutor.dir(gitDir) {

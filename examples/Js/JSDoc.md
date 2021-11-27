@@ -16,7 +16,6 @@ Except for this text which will have a line break before, of course.
    * `one` — the first parameter (without a type)
    * `{int}` — two the second parameter (with a type)
    * `{MyNoun}` — three the third parameter (custom object)
-
      second line for third parameter
  * **Returns:** {string} some arbitrary return value
  * **Author:**

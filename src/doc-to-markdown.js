@@ -454,7 +454,7 @@
 							if (codeBlockRegex.exec(part)) {
 								codeBlock=!codeBlock
 								if (codeBlock) {
-									value = value.replace(/\n?[ \t]+$/g,'');  
+									value = value.replace(/\n?[ \t]+$/g,"\n");  
 								}
 								value += part.trim() + "\n"
 								return
@@ -462,9 +462,9 @@
 							if (codeBlock) {
 								value += part + "\n"
 							} else if (index < m[2].length - 1) {
-								value += part.trim() + "\n\n     " 
+								value += part.trim() + "\n     " 
 							} else {
-								value += part.trim()
+								value += part.trim().replace(/<(\/)?p>/gi, "")
 							}
 						})
 
