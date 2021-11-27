@@ -26,7 +26,21 @@ class Example implements Serializable {
    * @param gitDir after empty line
    * @example report all these kind of logs before being able to report them
    * **Note**: Lint.transformReport - Note that some logs need to be converted to ng format
-   * @param String test my doc
+   * @param String test simple list
+   * Display list:
+   * - item 1
+   * - item 2
+   * @param String test ordered list
+   * Display list:
+   * 1. item 1
+   * 2. item 2
+   * @param String test list multiple level
+   * Display list:
+   * - item 1
+   *   - item 1.1
+   * - item 2
+   *   - item 2.1
+   *   - item 2.2
    */
   String examples(String test, String gitDir = '') {
     return this.jenkinsExecutor.dir(gitDir) {

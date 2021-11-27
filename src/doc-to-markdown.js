@@ -449,6 +449,7 @@
 
 						let value = ''
 						const codeBlockRegex = /^(?:\t| )*?```/
+						const listBlockRegexp = /^(?:\t| )*?(((\+|-|\*) )|([0-9]+\. ))/
 						let codeBlock = false
 						m[2].forEach((part, index, theArray) => {
 							if (codeBlockRegex.exec(part)) {
@@ -461,6 +462,8 @@
 							}
 							if (codeBlock) {
 								value += part + "\n"
+							} else if (listBlockRegexp.exec(part)) {
+								value += part + "\n     "
 							} else if (index < m[2].length - 1) {
 								value += part.trim() + "\n     " 
 							} else {

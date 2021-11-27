@@ -25,4 +25,21 @@ end of the test
      
  * **Parameters:**
    * `gitDir` — after empty line
-   * `String` — test my doc
+   * `String` — test simple list
+     Display list:
+      - item 1
+      - item 2
+     
+   * `String` — test ordered list
+     Display list:
+      1. item 1
+      2. item 2
+     
+   * `String` — test list multiple level
+     Display list:
+      - item 1
+        - item 1.1
+      - item 2
+        - item 2.1
+        - item 2.2
+     
